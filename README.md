@@ -1,1 +1,1 @@
-GithubActions-Lambda-Java
+GithubActions-Lambda-Java Function
