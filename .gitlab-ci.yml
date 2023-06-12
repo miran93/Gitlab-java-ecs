@@ -1,0 +1,25 @@
+stages:
+  - build
+  - deploy
+
+build:
+  stage: build
+  image: maven:3.8.1-jdk-11
+  script:
+    - mvn clean install
+
+deploy:
+  stage: deploy
+  image: amazon/aws-cli:2.x
+  environment:
+    name: production
+  script:
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    - aws ec2-instance-connect send-ssh-public-key --instance-id $EC2_INSTANCE_ID --availability-zone $AWS_REGION --instance-os-user ec2-user --ssh-public-key file:///root/.ssh/id_rsa.pub
+    - scp -i /root/.ssh/id_rsa $CI_PROJECT_DIR/target/myapp.jar ec2-user@$EC2_INSTANCE_IP:/home/ec2-user/
+    - ssh -i /root/.ssh/id_rsa ec2-user@$EC2_INSTANCE_IP "nohup java -jar /home/ec2-user/myapp.jar > /dev/null 2>&1 &"
