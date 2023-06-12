@@ -21,6 +21,6 @@ deploy:
     - chmod 700 ~/.ssh
     - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
-    - ssh -i /root/.ssh/id_rsa ec2-user@$EC2_INSTANCE_IP "mkdir -p /home/ec2-user/myapp"
-    - scp -i /root/.ssh/id_rsa $CI_PROJECT_DIR/target/myapp.jar ec2-user@$EC2_INSTANCE_IP:/home/ec2-user/myapp/
-    - ssh -i /root/.ssh/id_rsa ec2-user@$EC2_INSTANCE_IP "nohup java -jar /home/ec2-user/myapp/myapp.jar > /dev/null 2>&1 &"
+    - ssh -i ~/.ssh/id_rsa ec2-user@$EC2_INSTANCE_IP "mkdir -p /home/ec2-user/myapp"
+    - scp -i ~/.ssh/id_rsa $CI_PROJECT_DIR/target/myapp.jar ec2-user@$EC2_INSTANCE_IP:/home/ec2-user/myapp/
+    - ssh -i ~/.ssh/id_rsa ec2-user@$EC2_INSTANCE_IP "nohup java -jar /home/ec2-user/myapp/myapp.jar > /dev/null 2>&1 &"
