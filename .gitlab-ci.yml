@@ -16,9 +16,12 @@ build:
 
 artifact:
   stage: artifact
-  image: openjdk:11
   script:
     - echo "Creating artifact"
+    - mkdir artifacts
+  artifacts:
+    paths:
+      - artifacts/
 
 deploy:
   stage: deploy
