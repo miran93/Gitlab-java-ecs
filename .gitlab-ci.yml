@@ -1,26 +1,35 @@
 stages:
   - build
+  - artifact
   - deploy
+
+variables:
+  AWS_REGION: us-east-1
+  ECS_CLUSTER: Java-Cluster
+  ECS_SERVICE: java-service
 
 build:
   stage: build
-  image: maven:3.8.1-jdk-11
+  image: openjdk:11
   script:
-    - mvn clean install
+    - echo "Building the Java application"
+
+artifact:
+  stage: artifact
+  image: openjdk:11
+  script:
+    - echo "Creating artifact"
 
 deploy:
   stage: deploy
-  image: ubuntu:latest
-  before_script:
-    - apt-get update && apt-get install -y openssh-client
+  image: python:3.9
   script:
-    - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
-    - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-    - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh
-    - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
-    - chmod 644 ~/.ssh/known_hosts
-    - ssh -i ~/.ssh/id_rsa ec2-user@$EC2_INSTANCE_IP "mkdir -p /home/ec2-user/myapp"
-    - scp -i ~/.ssh/id_rsa $CI_PROJECT_DIR/target/myapp.jar ec2-user@$EC2_INSTANCE_IP:/home/ec2-user/myapp/
-    - ssh -i ~/.ssh/id_rsa ec2-user@$EC2_INSTANCE_IP "nohup java -jar /home/ec2-user/myapp/myapp.jar > /dev/null 2>&1 &"
+    - echo "Deploying the Java application to AWS ECS"
+    - apt-get update && apt-get install -y unzip
+    - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    - unzip awscliv2.zip
+    - ./aws/install
+    - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+    - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+    - aws configure set default.region $AWS_REGION
+    - aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE --force-new-deployment
